@@ -9,9 +9,9 @@ interface IDeque<T> : IList<T>
 
     public void Prepend(T item);
 
-    public void RemoveFirst(T item);
+    public void RemoveFirst();
 
-    public void RemoveLast(T item);
+    public void RemoveLast();
 
-    public void/*not void*/ Reverse();
+    public IList<T> GetReversed();
 }

@@ -7,7 +7,7 @@ public static class DequeTest
 {
 	public static IList<T> GetReverseView<T>(Deque<T> d)
 	{
-		return null;
+		return d.GetReversed();
 	}
 }
 

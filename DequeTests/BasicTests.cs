@@ -1,5 +1,6 @@
 using Deque_v1;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 
 namespace DequeTests
 {
@@ -89,6 +90,55 @@ namespace DequeTests
                 Assert.AreEqual(arr[i + 10], i);
             }
         }
+ 
+        [TestMethod]
+        public void RemoveAllAndRepopulate_Test()
+        {
+            Deque<int> deque = new Deque<int>();
 
+            int cycles = 5;
+
+
+            for (int i = 0; i < cycles; i++)
+            {
+                deque.Add(i);
+            }
+
+            for (int i = 0; i < cycles; i++)
+            {
+                deque.RemoveFirst();
+            }
+
+            for (int i = 0; i < cycles; i++)
+            {
+                deque.Add(i);
+            }
+
+            for (int i = 0; i < cycles; i++)
+            {
+                Assert.AreEqual(deque[i], i);
+            }
+        }
+
+        [TestMethod]
+        public void ModifyDuringForeach_Test()
+        {
+            Deque<int> deque = new Deque<int>();
+
+            int cycles = 5;
+
+
+            for (int i = 0; i < cycles; i++)
+            {
+                deque.Add(i);
+            }
+            Assert.ThrowsException<InvalidOperationException>(() =>
+            {
+                foreach (int i in deque)
+                {
+                    deque.Add(5);
+                }
+            });
+        }
     }
 }

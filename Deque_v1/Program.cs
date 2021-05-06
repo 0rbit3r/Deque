@@ -8,7 +8,15 @@ namespace Deque_v1
     {
         public static void Main()
         {
+            List<int> l = new List<int>();
 
+            l.Add(1);
+            l.Add(2);
+
+            foreach(int i in l)
+            {
+                l.Add(3);
+            }
         }
     }
 }
