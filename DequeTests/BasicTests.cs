@@ -121,6 +121,34 @@ namespace DequeTests
         }
 
         [TestMethod]
+        public void RemoveHalf_Test()
+        {
+            for (int cycles = 10; cycles < 100; cycles += 71)
+            {
+
+                Deque<int> deque = new Deque<int>();
+
+                //int cycles = 5;
+
+
+                for (int i = 0; i < cycles; i++)
+                {
+                    deque.Add(i);
+                }
+
+                for (int i = 0; i < cycles/2; i++)
+                {
+                    deque.RemoveFirst();
+                }
+
+                for (int i = 0; i < cycles / 2; i++)
+                {
+                    Assert.AreEqual(deque[i], i + cycles / 2);
+                }
+            }
+        }
+
+        [TestMethod]
         public void ModifyDuringForeach_Test()
         {
             Deque<int> deque = new Deque<int>();
@@ -139,6 +167,37 @@ namespace DequeTests
                     deque.Add(5);
                 }
             });
+        }
+
+        //[TestMethod]
+
+        public void BigInput_Test()
+        {
+            Deque<int> deque = new Deque<int>();
+
+            int cycles = 20000000;
+
+            for (int i = 0; i < cycles; i++)
+            {
+                deque.Add(i);
+            }
+
+            Assert.AreEqual(deque.Count, cycles);
+
+            for (int i = 0; i < cycles; i++)
+            {
+                deque.RemoveFirst();
+            }
+
+            Assert.AreEqual(deque.Count, 0);
+
+            for (int i = 0; i < cycles; i++)
+            {
+                deque.Add(i);
+            }
+
+            Assert.AreEqual(deque.Count, cycles);
+
         }
     }
 }

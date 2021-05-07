@@ -238,6 +238,7 @@ public class Deque<T> : IDeque<T>
 
         count--;
         _version++;
+        CleanMap();
     }
 
     IEnumerator IEnumerable.GetEnumerator()
@@ -265,6 +266,8 @@ public class Deque<T> : IDeque<T>
 
     public void RemoveFirst()
     {
+        CleanMap();
+
         startIndex++;
         count--;
         _version++;
@@ -272,6 +275,7 @@ public class Deque<T> : IDeque<T>
 
     public void RemoveLast()
     {
+        CleanMap();
         count--;
         _version++;
     }
@@ -281,6 +285,41 @@ public class Deque<T> : IDeque<T>
         return new ReversedDeque<T>(this, map, startIndex);
     }
 
+    private void CleanMap()
+    {
+        return;
+        if(startIndex >= map.Length * blockSize / 2 || startIndex + Count <= map.Length * blockSize / 2)
+        {
+            int mapStartIdx = startIndex / blockSize;
+            int populatedMaps = (startIndex + count) / blockSize - mapStartIdx + 1;
+            int indexOffset = startIndex % blockSize;
+
+            int newMapSize = populatedMaps < map.Length / 8 ? map.Length / 2 : map.Length;
+            DataBlock<T>[] newMap = new DataBlock<T>[newMapSize];
+
+            int valuesLowBound = newMapSize / 2 - Math.Max(1, populatedMaps / 2);
+            int valuesHighBound = newMapSize / 2 + populatedMaps / 2;
+
+            for (int i = 0; i < valuesLowBound; i++)
+            {
+                newMap[i] = new DataBlock<T>();
+            }
+
+            
+            for (int i = valuesLowBound, j = 0; i < valuesHighBound; i++, j++)
+            {
+                newMap[i] = map[mapStartIdx + j];
+            }
+
+            for (int i = valuesHighBound; i < newMap.Length; i++)
+            { 
+                newMap[i] = new DataBlock<T>();
+            }
+
+            map = newMap;
+            startIndex = valuesLowBound * blockSize + indexOffset;
+        }
+    }
 
     public class DequeEnum<U> : IEnumerator<U>
     {
@@ -313,20 +352,13 @@ public class Deque<T> : IDeque<T>
                 throw new InvalidOperationException();
             }
             currentIndex++;
-            if (currentBlockIdx >= DataBlock<T>.size - 1)
-            {
-                currentBlockIdx = 0;
-                currentMapIdx++;
-            }
-            else
-            {
-                currentBlockIdx++;
-            }
 
             if (currentIndex >= deque.Count)
             {
                 return false;
             }
+
+            deque.IncIndexes(ref currentMapIdx, ref currentBlockIdx);
 
             return true;
         }
@@ -338,6 +370,186 @@ public class Deque<T> : IDeque<T>
             currentBlockIdx = (deque.startIndex - 1) % DataBlock<T>.size;
         }
     }
+
+    public class ReversedDeque<T> : IDeque<T>
+    {
+        private DataBlock<T>[] map;
+
+        public T this[int index] { get => original[Count - index - 1]; set { original[Count - index - 1] = value; } }
+
+        public int Count => original.Count;
+
+        public bool IsReadOnly => false;
+
+        private Deque<T> original;
+
+        internal ReversedDeque(Deque<T> original, DataBlock<T>[] map, int startIndex)
+        {
+            this.original = original;
+            this.map = map;
+        }
+
+
+        public void Add(T item)
+        {
+            original.Prepend(item);
+
+        }
+
+        public void Append(T item)
+        {
+            original.Prepend(item);
+        }
+
+        public void Clear()
+        {
+            original.Clear();
+        }
+
+        public bool Contains(T item)
+        {
+            return original.Contains(item);
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            if (array == null)
+            {
+                throw new ArgumentNullException();
+            }
+            if (arrayIndex < 0)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+            if (arrayIndex + Count > array.Length)
+            {
+                throw new ArgumentException();
+            }
+
+            int i = arrayIndex;
+            foreach (T item in this)
+            {
+                array[i++] = item;
+            }
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return new ReversedDequeEnum<T>(this, map, original.startIndex, Count);
+        }
+
+        public int IndexOf(T item) //Will not return first one!
+        {
+            return Count - original.IndexOf(item) - 1;
+        }
+
+        public void Insert(int index, T item)
+        {
+            original.Insert(Count - index - 1, item);
+        }
+
+        public void Prepend(T item)
+        {
+            original.Append(item);
+        }
+
+        public bool Remove(T item)
+        {
+            return original.Remove(item);
+        }
+
+        public void RemoveAt(int index)
+        {
+            original.RemoveAt(Count - index - 1);
+        }
+
+        public void RemoveFirst()
+        {
+            original.RemoveLast();
+        }
+
+        public void RemoveLast()
+        {
+            original.RemoveFirst();
+        }
+
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IList<T> GetReversed()
+        {
+            return original;
+        }
+
+        class ReversedDequeEnum<T> : IEnumerator<T>
+        {
+            ReversedDeque<T> reversedDeque;
+            DataBlock<T>[] map;
+            int startIndex;
+            int count;
+            int version;
+
+            int currentIndex, currentMapIdx, currentBlockIdx;
+            public ReversedDequeEnum(ReversedDeque<T> reversed, DataBlock<T>[] map, int startIndex, int count)
+            {
+                reversedDeque = reversed;
+
+                version = reversedDeque.original._version;
+
+                this.map = map;
+                this.startIndex = startIndex;
+                this.count = count;
+
+                Reset();
+            }
+            public T Current => map[currentMapIdx][currentBlockIdx];
+
+            object IEnumerator.Current => Current;
+
+            public void Dispose()
+            {
+
+            }
+
+            public bool MoveNext()
+            {
+                if (reversedDeque.original._version != version)
+                {
+                    throw new InvalidOperationException();
+                }
+                currentIndex--;
+                if (currentBlockIdx <= 0)
+                {
+                    currentBlockIdx = DataBlock<T>.size - 1;
+                    currentMapIdx--;
+                }
+                else
+                {
+                    currentBlockIdx--;
+                }
+
+                if (currentIndex < 0)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            public void Reset()
+            {
+                currentIndex = count;
+                currentMapIdx = (startIndex + count) / DataBlock<T>.size;
+                currentBlockIdx = (startIndex + count) % DataBlock<T>.size;
+            }
+        }
+
+    }
+
+
 }
 
 internal class DataBlock<U>
@@ -355,177 +567,5 @@ internal class DataBlock<U>
     {
         get => dataArray[index];
         set { dataArray[index] = value; }
-    }
-}
-
-public class ReversedDeque<T> : IDeque<T>
-{
-    private int startIndex;
-
-    private DataBlock<T>[] map;
-
-    public T this[int index] { get => original[Count - index - 1]; set { original[Count - index - 1] = value; } }
-
-    public int Count => original.Count;
-
-    public bool IsReadOnly => false;
-
-    private Deque<T> original;
-
-    internal ReversedDeque(Deque<T> original, DataBlock<T>[] map, int startIndex)
-    {
-        this.original = original;
-        this.map = map;
-        this.startIndex = startIndex;
-    }
-
-
-    public void Add(T item)
-    {
-        original.Prepend(item);
-        startIndex--;
-    }
-
-    public void Append(T item)
-    {
-        original.Prepend(item);
-    }
-
-    public void Clear()
-    {
-        original.Clear();
-        startIndex = DataBlock<T>.size * 2;
-    }
-
-    public bool Contains(T item)
-    {
-        return original.Contains(item);
-    }
-
-    public void CopyTo(T[] array, int arrayIndex)
-    {
-        if (array == null)
-        {
-            throw new ArgumentNullException();
-        }
-        if (arrayIndex < 0)
-        {
-            throw new ArgumentOutOfRangeException();
-        }
-        if (arrayIndex + Count > array.Length)
-        {
-            throw new ArgumentException();
-        }
-
-        int i = arrayIndex;
-        foreach (T item in this)
-        {
-            array[i++] = item;
-        }
-    }
-
-    public IEnumerator<T> GetEnumerator()
-    {
-        return new ReversedDequeEnum<T>(map, startIndex, Count);
-    }
-
-    public int IndexOf(T item) //Will not return first one!
-    {
-        return Count - original.IndexOf(item) - 1;
-    }
-
-    public void Insert(int index, T item)
-    {
-        original.Insert(Count - index - 1, item);
-    }
-
-    public void Prepend(T item)
-    {
-        original.Append(item);
-    }
-
-    public bool Remove(T item)
-    {
-        return original.Remove(item);
-    }
-
-    public void RemoveAt(int index)
-    {
-        original.RemoveAt(Count - index - 1);
-    }
-
-    public void RemoveFirst()
-    {
-        original.RemoveLast();
-    }
-
-    public void RemoveLast()
-    {
-        original.RemoveFirst();
-        startIndex++;
-    }
-
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
-
-    public IList<T> GetReversed()
-    {
-        return original;
-    }
-}
-
-class ReversedDequeEnum<T> : IEnumerator<T>
-{
-    DataBlock<T>[] map;
-    int startIndex;
-    int count;
-
-    int currentIndex, currentMapIdx, currentBlockIdx;
-    public ReversedDequeEnum(DataBlock<T>[] map, int startIndex, int count)
-    {
-        this.map = map;
-        this.startIndex = startIndex;
-        this.count = count;
-
-        Reset();
-    }
-    public T Current => map[currentMapIdx][currentBlockIdx];
-
-    object IEnumerator.Current => Current;
-
-    public void Dispose()
-    {
-
-    }
-
-    public bool MoveNext()
-    {
-        currentIndex--;
-        if (currentBlockIdx <= 0)
-        {
-            currentBlockIdx = DataBlock<T>.size - 1;
-            currentMapIdx--;
-        }
-        else
-        {
-            currentBlockIdx--;
-        }
-
-        if (currentIndex < 0)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    public void Reset()
-    {
-        currentIndex = count;
-        currentMapIdx = (startIndex + count) / DataBlock<T>.size;
-        currentBlockIdx = (startIndex + count) % DataBlock<T>.size;
     }
 }

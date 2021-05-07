@@ -8,14 +8,29 @@ namespace Deque_v1
     {
         public static void Main()
         {
-            List<int> l = new List<int>();
 
-            l.Add(1);
-            l.Add(2);
-
-            foreach(int i in l)
+            for (int cycles = 10; cycles < 100; cycles += 71)
             {
-                l.Add(3);
+
+                Deque<int> deque = new Deque<int>();
+
+                //int cycles = 5;
+
+
+                for (int i = 0; i < cycles; i++)
+                {
+                    deque.Add(i);
+                }
+
+                for (int i = 0; i < cycles / 2; i++)
+                {
+                    deque.RemoveFirst();
+                }
+
+                for (int i = cycles / 2; i < cycles; i++)
+                {
+                    deque[i] = 1;
+                }
             }
         }
     }

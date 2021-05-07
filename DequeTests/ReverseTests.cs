@@ -18,7 +18,7 @@ namespace DequeTests
             {
                 deque.Add(i);
             }
-            ReversedDeque<int> reversed = (ReversedDeque<int>)deque.GetReversed();
+            Deque<int>.ReversedDeque<int> reversed = (Deque<int>.ReversedDeque<int>)deque.GetReversed();
 
             for (int i = 99; i >=0 ; i--)
             {
@@ -56,6 +56,30 @@ namespace DequeTests
             }
 
 
+        }
+
+        [TestMethod]
+        public void ModifyDuringReversedForeach_Test()
+        {
+            Deque<int> deque = new Deque<int>();
+
+            int cycles = 5;
+
+
+            for (int i = 0; i < cycles; i++)
+            {
+                deque.Add(i);
+            }
+
+            IList<int> reversed = deque.GetReversed();
+
+            Assert.ThrowsException<InvalidOperationException>(() =>
+            {
+                foreach (int i in reversed)
+                {
+                    reversed.Add(5);
+                }
+            });
         }
 
     }
