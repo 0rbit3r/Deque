@@ -160,12 +160,16 @@ public class Deque<T> : IDeque<T>
 
     public int IndexOf(T item)
     {
-        int i = 0;
-        foreach (T element in this)
+        int mapIndex = startIndex / blockSize;
+        int blockIndex = startIndex % blockSize;
+
+        for (int i = 0; i < Count; i++)
         {
-            if (element.Equals(item))
+            if (map[mapIndex][blockIndex] != null && map[mapIndex][blockIndex].Equals(item))
+            {
                 return i;
-            i++;
+            }
+            IncIndexes(ref mapIndex, ref blockIndex);
         }
         return -1;
     }
@@ -539,14 +543,14 @@ public class Deque<T> : IDeque<T>
                     currentBlockIdx--;
                 }
 
-                if (Current == null)
-                {
-                    return MoveNext();
-                }
-
                 if (currentIndex < 0)
                 {
                     return false;
+                }
+
+                if (Current == null)
+                {
+                    return MoveNext();
                 }
 
                 return true;

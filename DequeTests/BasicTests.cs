@@ -204,11 +204,16 @@ namespace DequeTests
                 deque.Add(i.ToString());
             }
 
-            deque[42] = null;
-
-            foreach(string s in deque)
+            for (int i = 0; i < cycles / 2; i++)
             {
-                deque.IndexOf(s);
+                deque[i] = null;
+            }
+
+
+
+            foreach (string s in deque)
+            {
+                Console.WriteLine(deque.IndexOf(s));
             }
         }
     }
