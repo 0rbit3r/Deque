@@ -143,7 +143,7 @@ namespace DequeTests
 
                 for (int i = 0; i < cycles / 2; i++)
                 {
-                    Assert.AreEqual(deque[i], i + cycles / 2);
+                    Assert.AreEqual(i + cycles / 2, deque[i]);
                 }
             }
         }
@@ -169,35 +169,47 @@ namespace DequeTests
             });
         }
 
-        //[TestMethod]
-
-        public void BigInput_Test()
+        [TestMethod]
+        public void Prepend_Test()
         {
             Deque<int> deque = new Deque<int>();
 
-            int cycles = 20000000;
+            int cycles =1_000_000;
 
             for (int i = 0; i < cycles; i++)
             {
-                deque.Add(i);
+                deque.Prepend(i);
             }
 
-            Assert.AreEqual(deque.Count, cycles);
+            for (int i = 0; i < cycles / 2; i++)
+            {
+                deque.RemoveAt(deque.Count - 1);
+            }
+
+            for (int i = 0; i < cycles / 2; i++)
+            {
+                Assert.AreEqual(cycles - 1 - i, deque[i]);
+            }
+        }
+    
+        [TestMethod]
+        public void Nulls_Test()
+        {
+            Deque<string> deque = new Deque<string>();
+
+            int cycles = 1_000;
 
             for (int i = 0; i < cycles; i++)
             {
-                deque.RemoveFirst();
+                deque.Add(i.ToString());
             }
 
-            Assert.AreEqual(deque.Count, 0);
+            deque[42] = null;
 
-            for (int i = 0; i < cycles; i++)
+            foreach(string s in deque)
             {
-                deque.Add(i);
+                deque.IndexOf(s);
             }
-
-            Assert.AreEqual(deque.Count, cycles);
-
         }
     }
 }

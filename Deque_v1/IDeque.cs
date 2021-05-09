@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-interface IDeque<T> : IList<T>
+public interface IDeque<T> : IList<T>
 {
     public void Append(T item);
 

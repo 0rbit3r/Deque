@@ -8,30 +8,16 @@ namespace Deque_v1
     {
         public static void Main()
         {
+            int cycles = 100;
+            IDeque<int> deque = (IDeque<int>)new Deque<int>().GetReversed();
 
-            for (int cycles = 10; cycles < 100; cycles += 71)
+            for (int i = 0; i < cycles; i++)
             {
-
-                Deque<int> deque = new Deque<int>();
-
-                //int cycles = 5;
-
-
-                for (int i = 0; i < cycles; i++)
-                {
-                    deque.Add(i);
-                }
-
-                for (int i = 0; i < cycles / 2; i++)
-                {
-                    deque.RemoveFirst();
-                }
-
-                for (int i = cycles / 2; i < cycles; i++)
-                {
-                    deque[i] = 1;
-                }
+                deque.Insert(0, i);
             }
+
+
+            Console.ReadLine();
         }
     }
 }
