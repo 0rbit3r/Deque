@@ -36,6 +36,19 @@ public class Deque<T> : IDeque<T>
         }
     }
 
+    private void DecIndexes(ref int map, ref int block)
+    {
+        if (block <= 0)
+        {
+            block = blockSize - 1;
+            map--;
+        }
+        else
+        {
+            block--;
+        }
+    }
+
     private void DoubleCapacity()
     {
         DataBlock<T>[] newMap = new DataBlock<T>[map.Length * 2];
@@ -165,7 +178,7 @@ public class Deque<T> : IDeque<T>
 
         for (int i = 0; i < Count; i++)
         {
-            if (map[mapIndex][blockIndex] != null && map[mapIndex][blockIndex].Equals(item))
+            if ((item == null && map[mapIndex][blockIndex] == null) || (map[mapIndex][blockIndex] != null && map[mapIndex][blockIndex].Equals(item)))
             {
                 return i;
             }
@@ -371,11 +384,6 @@ public class Deque<T> : IDeque<T>
 
             deque.IncIndexes(ref currentMapIdx, ref currentBlockIdx);
 
-            if (Current == null)
-            {
-                return MoveNext();
-            }
-
             return true;
         }
 
@@ -453,8 +461,22 @@ public class Deque<T> : IDeque<T>
 
         public int IndexOf(T item)
         {
-            int index = original.IndexOf(item);
-            return index == -1 ? -1 : Count - original.IndexOf(item) - 1;
+            //int index = original.IndexOf(item);
+            //return index == -1 ? -1 : Count - original.IndexOf(item) - 1;
+
+            int mapIndex = (original.startIndex + Count - 1) / original.blockSize;
+            int blockIndex = (original.startIndex + Count - 1) % original.blockSize;
+
+            for (int i = Count - 1; i >= 0; i--)
+            {
+                if ((item == null && original.map[mapIndex][blockIndex] == null) || 
+                    (original.map[mapIndex][blockIndex] != null && original.map[mapIndex][blockIndex].Equals(item)))
+                {
+                    return Count - i - 1;
+                }
+                original.DecIndexes(ref mapIndex, ref blockIndex);
+            }
+            return -1;
         }
 
         public void Insert(int index, T item)
@@ -548,10 +570,10 @@ public class Deque<T> : IDeque<T>
                     return false;
                 }
 
-                if (Current == null)
-                {
-                    return MoveNext();
-                }
+                //if (Current == null)
+                //{
+                //    return MoveNext();
+                //}
 
                 return true;
             }

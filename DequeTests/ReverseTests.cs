@@ -424,30 +424,5 @@ namespace DequeTests
                 Assert.AreEqual(cycles - 1 - i, deque[i]);
             }
         }
-
-        [TestMethod]
-        public void Nulls_Test()
-        {
-            IDeque<string> deque = (IDeque<string>)new Deque<string>().GetReversed();
-
-            int cycles = 1_000;
-
-            for (int i = 0; i < cycles; i++)
-            {
-                deque.Add(i.ToString());
-            }
-
-            for (int i = 0; i < cycles / 2; i++)
-            {
-                deque[i] = null;
-            }
-
-
-
-            foreach (string s in deque)
-            {
-                Console.WriteLine(deque.IndexOf(s));
-            }
-        }
     }
 }

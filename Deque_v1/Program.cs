@@ -8,16 +8,35 @@ namespace Deque_v1
     {
         public static void Main()
         {
+            ReversedForeachWithNulls_Test();
+        }
+
+        public static void ReversedForeachWithNulls_Test()
+        {
+            IDeque<string> deque = (IDeque<string>)new Deque<string>().GetReversed();
+
             int cycles = 100;
-            IDeque<int> deque = (IDeque<int>)new Deque<int>().GetReversed();
 
             for (int i = 0; i < cycles; i++)
             {
-                deque.Insert(0, i);
+                deque.Add(i.ToString());
             }
 
+            deque[42] = null;
 
-            Console.ReadLine();
+            int j = 0;
+            foreach (string s in deque)
+            {
+                if (s == null)
+                {
+                    Console.WriteLine($"Expected: 42\tReal: {deque.IndexOf(s)}");
+                }
+                else
+                {
+                    Console.WriteLine($"Expected: {j}\tReal: {deque.IndexOf(s)}");
+                }
+                j++;
+            }
         }
     }
 }
